@@ -298,6 +298,11 @@ fs::path ArgsManager::GetBlocksDirPath() const
 
     path /= fs::PathFromString(BaseParams().DataDir());
     path /= "blocks";
+
+    //If chaintype is signet, append signet hash160 to blocksdir
+    if (GetChainType() == ChainType::SIGNET) {
+        path /= BaseParams().SignetHash160();
+    }
     fs::create_directories(path);
     return path;
 }
