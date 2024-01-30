@@ -304,9 +304,22 @@ fs::path ArgsManager::GetBlocksDirPath() const
     //If chaintype is signet, append signet hash160 to blocksdir
     if (GetChainType() == ChainType::SIGNET) {
         //Calculate signet hash160 from signet challenge
-        std::string a = GetArg("-signetchallenge");
-        std::string signet_hash160 = ripemd160.Write(sha256.Write(a.begin(), a.end()));
-        path /= segnet_hash160;
+        std::string a = GetArg("-signetchallenge", "");
+        // Calculate SHA256 hash of the challenge
+        CSHA256 sha256;
+        std::vector<unsigned char> sha256_hash(CSHA256::OUTPUT_SIZE);
+        sha256.Write((const unsigned char*)signet_challenge.data(), signet_challenge.size()).Finalize(sha256_hash.data());
+
+        // Calculate RIPEMD160 hash of the SHA256 hash
+        CRIPEMD160 ripemd160;
+        std::vector<unsigned char> ripemd160_hash(CRIPEMD160::OUTPUT_SIZE);
+        ripemd160.Write(sha256_hash.data(), CSHA256::OUTPUT_SIZE).Finalize(ripemd160_hash.data());
+
+        // Convert the hash to a hexadecimal string
+        std::string signet_hash160 = HexStr(ripemd160_hash);
+
+        // Append the hash160 to the path
+        path /= signet_hash160;
     }
     fs::create_directories(path);
     return path;
