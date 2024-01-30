@@ -34,6 +34,8 @@
 #include <string>
 #include <utility>
 #include <variant>
+#include <crypto/ripemd160.h>
+#include <crypto/sha256.h>
 
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_SETTINGS_FILENAME = "settings.json";
@@ -301,7 +303,10 @@ fs::path ArgsManager::GetBlocksDirPath() const
 
     //If chaintype is signet, append signet hash160 to blocksdir
     if (GetChainType() == ChainType::SIGNET) {
-        path /= BaseParams().SignetHash160();
+        //Calculate signet hash160 from signet challenge
+        std::string a = GetArg("-signetchallenge");
+        std::string signet_hash160 = ripemd160.Write(sha256.Write(a.begin(), a.end()));
+        path /= segnet_hash160;
     }
     fs::create_directories(path);
     return path;
